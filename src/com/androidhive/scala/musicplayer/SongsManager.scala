@@ -3,7 +3,7 @@ package com.androidhive.scala.musicplayer
 import java.io.File
 import java.io.FilenameFilter
 
-class SongsManager {
+object SongsManager {
 	// SDCard Path
 	val MEDIA_PATH = "/sdcard/"
 

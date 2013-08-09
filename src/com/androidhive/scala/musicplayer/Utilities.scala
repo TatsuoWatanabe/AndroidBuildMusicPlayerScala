@@ -1,8 +1,6 @@
 package com.androidhive.scala.musicplayer
 
-
-
-class Utilities {
+object Utilities {
   
   /**
    * Function to convert milliseconds time to

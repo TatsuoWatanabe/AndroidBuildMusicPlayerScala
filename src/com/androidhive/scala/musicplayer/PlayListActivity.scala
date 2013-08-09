@@ -6,7 +6,7 @@ import android.widget._
 
 class PlayListActivity extends android.app.ListActivity  {
   // get all songs from sdcard
-  val songsList = (new SongsManager).getPlayList
+  val songsList = SongsManager.getPlayList
 
   override protected def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
