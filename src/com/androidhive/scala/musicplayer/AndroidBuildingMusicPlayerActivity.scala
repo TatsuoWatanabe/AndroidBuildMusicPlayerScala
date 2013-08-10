@@ -15,23 +15,23 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
 
   // All player buttons
   private object Btns {
-    lazy val btnPlay                  = findViewById(R.id.btnPlay).asInstanceOf[ImageButton]
-    lazy val btnForward               = findViewById(R.id.btnForward).asInstanceOf[ImageButton]
-    lazy val btnBackward              = findViewById(R.id.btnBackward).asInstanceOf[ImageButton]
-    lazy val btnNext                  = findViewById(R.id.btnNext).asInstanceOf[ImageButton]
-    lazy val btnPrevious              = findViewById(R.id.btnPrevious).asInstanceOf[ImageButton]
-    lazy val btnPlaylist              = findViewById(R.id.btnPlaylist).asInstanceOf[ImageButton]
-    lazy val btnRepeat                = findViewById(R.id.btnRepeat).asInstanceOf[ImageButton]
-    lazy val btnShuffle               = findViewById(R.id.btnShuffle).asInstanceOf[ImageButton]
-    lazy val songProgressBar          = findViewById(R.id.songProgressBar).asInstanceOf[SeekBar]
-    lazy val songTitleLabel           = findViewById(R.id.songTitle).asInstanceOf[TextView]
-    lazy val songCurrentDurationLabel = findViewById(R.id.songCurrentDurationLabel).asInstanceOf[TextView]
-    lazy val songTotalDurationLabel   = findViewById(R.id.songTotalDurationLabel).asInstanceOf[TextView]
+    val btnPlay                  = findViewById(R.id.btnPlay).asInstanceOf[ImageButton]
+    val btnForward               = findViewById(R.id.btnForward).asInstanceOf[ImageButton]
+    val btnBackward              = findViewById(R.id.btnBackward).asInstanceOf[ImageButton]
+    val btnNext                  = findViewById(R.id.btnNext).asInstanceOf[ImageButton]
+    val btnPrevious              = findViewById(R.id.btnPrevious).asInstanceOf[ImageButton]
+    val btnPlaylist              = findViewById(R.id.btnPlaylist).asInstanceOf[ImageButton]
+    val btnRepeat                = findViewById(R.id.btnRepeat).asInstanceOf[ImageButton]
+    val btnShuffle               = findViewById(R.id.btnShuffle).asInstanceOf[ImageButton]
+    val songProgressBar          = findViewById(R.id.songProgressBar).asInstanceOf[SeekBar]
+    val songTitleLabel           = findViewById(R.id.songTitle).asInstanceOf[TextView]
+    val songCurrentDurationLabel = findViewById(R.id.songCurrentDurationLabel).asInstanceOf[TextView]
+    val songTotalDurationLabel   = findViewById(R.id.songTotalDurationLabel).asInstanceOf[TextView]
   }
   
   private object Player {
     val mp = new MediaPlayer
-    val songsList = SongsManager.getPlayList
+    val playList = SongsManager.getPlayList
     val seekForwardTime  = 5000 //milliseconds
     val seekBackwardTime = 5000 //milliseconds
     var isShuffle = false
@@ -48,23 +48,24 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
       case _ => mp.seekTo(0) //backward to starting position
     }
     
-    def setIndex(i: Int) { index = i; mp.reset; mp.setDataSource(songsList.get(i).get("songPath")); mp.prepare }
-    def setRandomIndex() { index = (new scala.util.Random).nextInt(songsList.size) }
-    def initialize() = this.mp.reset
-    def getTitle() = songsList.get(index).get("songTitle")
+    def setIndex(i: Int) { index = i; mp.reset; mp.setDataSource(playList.get(i).get("songPath")); mp.prepare }
+    def setRandomIndex() { index = (new scala.util.Random).nextInt(playList.size) }
+    def initialize() = setIndex(0)
+    def getTitle() = playList.get(index).get("songTitle")
     def getProgressPercentage() = Utilities.getProgressPercentage(mp.getCurrentPosition, mp.getDuration)
     def getCurrentTimeString()  = Utilities.milliSecondsToTimer(mp.getCurrentPosition)
     def getTotalTimeString()    = Utilities.milliSecondsToTimer(mp.getDuration)
-    def hasNext() = index < songsList.size - 1
+    def hasNext() = index < playList.size - 1
     def hasPrevious() = index > 0
     def next()     { if(hasNext)     setIndex(index + 1) else setIndex(0) }
-    def previous() { if(hasPrevious) setIndex(index - 1) else setIndex(songsList.size - 1) }
+    def previous() { if(hasPrevious) setIndex(index - 1) else setIndex(playList.size - 1) }
   } //end object Player
   
   override protected def onCreate(savedInstanceState: android.os.Bundle) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.player)
     Player.initialize
+    referPlayer
     
     // Listeners
     Btns.songProgressBar.setOnSeekBarChangeListener(this) // Important
@@ -76,7 +77,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     Btns.btnPlay.setOnClickListener(new View.OnClickListener {
       override def onClick(arg0: View) = Player.mp.isPlaying match {
         case true  => Player.mp.pause; referPlayer
-        case false => Player.mp.start; referPlayer
+        case false => startPlaying
       }
     })
     
@@ -238,7 +239,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     case(true, _) => startPlaying //repeat is on play same song again
     case(false, true) => Player.setRandomIndex; startPlaying //shuffle is on - play a random song
     case(_, _) if Player.hasNext => Player.next; startPlaying // no repeat or shuffle ON - play next song
-    case _ => Player.setIndex(0); referPlayer //to first song
+    case _ => Player.initialize; referPlayer //to first song
   }
   
   /**

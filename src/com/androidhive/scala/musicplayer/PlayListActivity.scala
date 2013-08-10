@@ -1,21 +1,20 @@
 package com.androidhive.scala.musicplayer
 
-import android.os.Bundle
-import android.view.View
-import android.widget._
+import android.widget.SimpleAdapter
+import android.widget.AdapterView
 
 class PlayListActivity extends android.app.ListActivity  {
   // get all songs from sdcard
-  val songsList = SongsManager.getPlayList
+  val playList = SongsManager.getPlayList
 
-  override protected def onCreate(savedInstanceState: Bundle) {
+  override protected def onCreate(savedInstanceState: android.os.Bundle) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.playlist)
 
     // Adding menuItems to ListView
     setListAdapter(new SimpleAdapter(
       this,
-      songsList,
+      playList,
       R.layout.playlist_item,
       Array("songTitle"),
       Array(R.id.songTitle)
@@ -23,13 +22,13 @@ class PlayListActivity extends android.app.ListActivity  {
 
     // listening to single listitem click
     getListView.setOnItemClickListener(new AdapterView.OnItemClickListener {
-      override def onItemClick(parent: AdapterView[_], view: View, position: Int, id: Long) {
+      override def onItemClick(parent: AdapterView[_], view: android.view.View, position: Int, id: Long) {
         // Starting new intent
         val in = new android.content.Intent(getApplicationContext(), classOf[AndroidBuildingMusicPlayerActivity])
         
         // Sending songIndex to PlayerActivity
         setResult(100, in.putExtra("songIndex", position))
-        finish();
+        finish()
       }// end onItemClick
     })// end setOnItemClickListener
   }// end onCreate
