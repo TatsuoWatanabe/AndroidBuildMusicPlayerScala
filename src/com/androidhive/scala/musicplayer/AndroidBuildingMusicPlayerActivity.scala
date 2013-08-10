@@ -1,20 +1,17 @@
 package com.androidhive.scala.musicplayer
 
-import android.app.Activity
 import android.content.Intent
 import android.media.MediaPlayer
 import android.media.MediaPlayer.OnCompletionListener
-import android.os.Bundle
-import android.os.Handler
 import android.view.View
 import android.widget.ImageButton
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 
-class AndroidBuildingMusicPlayerActivity extends Activity with OnCompletionListener with SeekBar.OnSeekBarChangeListener {
+class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCompletionListener with SeekBar.OnSeekBarChangeListener {
   // Handler to update UI timer, progress bar etc,.
-  private val mHandler = new Handler
+  private val mHandler = new android.os.Handler
 
   // All player buttons
   private object Btns {
@@ -64,7 +61,7 @@ class AndroidBuildingMusicPlayerActivity extends Activity with OnCompletionListe
     def previous() { if(hasPrevious) setIndex(index - 1) else setIndex(songsList.size - 1) }
   } //end object Player
   
-  override protected def onCreate(savedInstanceState: Bundle) {
+  override protected def onCreate(savedInstanceState: android.os.Bundle) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.player)
     Player.initialize
@@ -103,14 +100,14 @@ class AndroidBuildingMusicPlayerActivity extends Activity with OnCompletionListe
      * Next button click event
      */
     Btns.btnNext.setOnClickListener(new View.OnClickListener {
-      override def onClick(arg0: View) { Player.next; playSong }
+      override def onClick(arg0: View) { Player.next; startPlaying }
     })
     
     /**
      * Back button click event
      */
     Btns.btnPrevious.setOnClickListener(new View.OnClickListener {
-      override def onClick(arg0: View) { Player.previous; playSong }
+      override def onClick(arg0: View) { Player.previous; startPlaying }
     })
     
     /**
@@ -157,14 +154,14 @@ class AndroidBuildingMusicPlayerActivity extends Activity with OnCompletionListe
     super.onActivityResult(requestCode, resultCode, data)
     if(resultCode == 100){
       Player.setIndex(data.getExtras().getInt("songIndex"))
-      playSong //play selected song
+      startPlaying //play selected one
     }
   }
   
   /**
    * Function to play a song
    */
-  def playSong() {
+  def startPlaying() {
     try {
       Player.mp.start
       referPlayer
@@ -238,9 +235,9 @@ class AndroidBuildingMusicPlayerActivity extends Activity with OnCompletionListe
    * On Song Playing completed
    */
   override def onCompletion(arg0: MediaPlayer) = (Player.isRepeat, Player.isShuffle) match {
-    case(true, _) => playSong //repeat is on play same song again
-    case(false, true) => Player.setRandomIndex; playSong //shuffle is on - play a random song
-    case(_, _) if Player.hasNext => Player.next; playSong // no repeat or shuffle ON - play next song
+    case(true, _) => startPlaying //repeat is on play same song again
+    case(false, true) => Player.setRandomIndex; startPlaying //shuffle is on - play a random song
+    case(_, _) if Player.hasNext => Player.next; startPlaying // no repeat or shuffle ON - play next song
     case _ => Player.setIndex(0); referPlayer //to first song
   }
   
