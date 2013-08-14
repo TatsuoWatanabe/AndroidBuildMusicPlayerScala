@@ -7,7 +7,7 @@ object Utilities {
    * Timer Format
    * Hours:Minutes:Seconds
    * */
-  def milliSecondsToTimer(milliseconds: Long) = {
+  def milliSecondsToTimeString(milliseconds: Long) = {
     val pattern = """(\d+):(\d+):(\d+)""".r
     val df = new java.text.SimpleDateFormat("H:mm:ss")
     df.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
@@ -38,10 +38,20 @@ object Utilities {
    * @param totalDuration
    * returns current duration in milliseconds
    * */
-  def progressToTimer(progress: Int, totalDuration: Int) = {
+  def progressToMilliSeconds(progress: Int, totalDuration: Int) = {
     val currentDuration = (progress.toDouble / 100 * totalDuration.toDouble / 1000).toInt
     
     // return current duration in milliseconds
     currentDuration * 1000
+  }
+  
+  /**
+   * Function to change progress to time string
+   * @param progress
+   * @param totalDuration
+   */
+  def progressToTimeString(progress: Int, totalDuration: Int) = {
+    val m = progressToMilliSeconds(progress, totalDuration)
+    milliSecondsToTimeString(m)
   }
 }

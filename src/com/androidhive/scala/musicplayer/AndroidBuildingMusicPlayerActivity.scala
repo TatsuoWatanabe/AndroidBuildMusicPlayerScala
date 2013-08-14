@@ -53,8 +53,9 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     def initialize() = setIndex(0)
     def getTitle() = playList.get(index).get("songTitle")
     def getProgressPercentage() = Utilities.getProgressPercentage(mp.getCurrentPosition, mp.getDuration)
-    def getCurrentTimeString()  = Utilities.milliSecondsToTimer(mp.getCurrentPosition)
-    def getTotalTimeString()    = Utilities.milliSecondsToTimer(mp.getDuration)
+    def getTimeStringByPercentage(p: Int) = Utilities.progressToTimeString(p, mp.getDuration)
+    def getCurrentTimeString()  = Utilities.milliSecondsToTimeString(mp.getCurrentPosition)
+    def getTotalTimeString()    = Utilities.milliSecondsToTimeString(mp.getDuration)
     def hasNext() = index < playList.size - 1
     def hasPrevious() = index > 0
     def next()     { if(hasNext)     setIndex(index + 1) else setIndex(0) }
@@ -210,11 +211,6 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     Btns.songProgressBar.setProgress(Player.getProgressPercentage) //set Progress bar values
     Btns.songProgressBar.setMax(100)    //set Progress bar values
   }
-    
-  /**
-   * onProgressChanged
-   */
-  override def onProgressChanged(seekBar: SeekBar, progress: Int, fromTouch: Boolean) { }
 
   /**
    * When user starts moving the progress handler
@@ -222,11 +218,19 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
   override def onStartTrackingTouch(seekBar: SeekBar) = mHandler.removeCallbacks(mUpdateTimeTask)
   
   /**
+   * onProgressChanged
+   */
+  override def onProgressChanged(seekBar: SeekBar, progress: Int, fromTouch: Boolean) = fromTouch match {
+    case true => Btns.songCurrentDurationLabel.setText(Player.getTimeStringByPercentage(progress))
+    case false =>
+  }
+  
+  /**
    * When user stops moving the progress hanlder
    */
   override def onStopTrackingTouch(seekBar: SeekBar) {
     mHandler.removeCallbacks(mUpdateTimeTask)
-    val currentPosition = Utilities.progressToTimer(seekBar.getProgress, Player.mp.getDuration)
+    val currentPosition = Utilities.progressToMilliSeconds(seekBar.getProgress, Player.mp.getDuration)
 
     Player.mp.seekTo(currentPosition) //forward or backward to certain seconds
     updateProgressBar //update timer progress again
