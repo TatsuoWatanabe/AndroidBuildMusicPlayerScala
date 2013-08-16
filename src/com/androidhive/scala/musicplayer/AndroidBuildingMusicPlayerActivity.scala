@@ -52,8 +52,8 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     def setRandomIndex() { index = (new scala.util.Random).nextInt(playList.size) }
     def initialize() = setIndex(0)
     def getTitle() = playList.get(index).get("songTitle")
-    def getProgressPercentage() = Utilities.getProgressPercentage(mp.getCurrentPosition, mp.getDuration)
     def getTimeStringByPercentage(p: Int) = Utilities.progressToTimeString(p, mp.getDuration)
+    def getProgressPercentage() = Utilities.getProgressPercentage(mp.getCurrentPosition, mp.getDuration)
     def getCurrentTimeString()  = Utilities.milliSecondsToTimeString(mp.getCurrentPosition)
     def getTotalTimeString()    = Utilities.milliSecondsToTimeString(mp.getDuration)
     def hasNext() = index < playList.size - 1
@@ -65,6 +65,13 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
   override protected def onCreate(savedInstanceState: android.os.Bundle) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.player)
+    
+    if(Player.playList.isEmpty){
+      val s = "再生できるファイルが見つかりませんでした。"
+      (new android.app.AlertDialog.Builder(this)).setMessage(s).setPositiveButton(android.R.string.ok, null).show()
+      return
+    }
+    
     Player.initialize
     referPlayer
     
@@ -146,7 +153,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
         startActivityForResult(i, 100)
       }
     })
-    
+
   } //end onCreate
   
   /**

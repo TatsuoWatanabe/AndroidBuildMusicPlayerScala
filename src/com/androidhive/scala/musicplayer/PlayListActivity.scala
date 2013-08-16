@@ -28,7 +28,7 @@ class PlayListActivity extends android.app.ListActivity  {
         
         // Sending songIndex to PlayerActivity
         setResult(100, in.putExtra("songIndex", position))
-        finish()
+        finish
       }// end onItemClick
     })// end setOnItemClickListener
   }// end onCreate

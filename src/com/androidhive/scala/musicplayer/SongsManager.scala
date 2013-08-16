@@ -10,7 +10,7 @@ object SongsManager {
    */
   def getPlayList = {
 	import java.util.HashMap
-	//TODO: NO MEDIA ...
+
     val home = new java.io.File(MEDIA_PATH)
     val playList = new java.util.ArrayList[HashMap[String, String]]()
 

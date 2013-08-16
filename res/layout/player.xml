@@ -15,17 +15,19 @@
         android:paddingRight="5dp">
         
         <!-- Song Title -->
-        <TextView 
+
+        <TextView
             android:id="@+id/songTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:layout_weight="1"
+            android:paddingLeft="10dp"
+            android:text="No File"
             android:textColor="#04b3d2"
             android:textSize="16dp"
-            android:paddingLeft="10dp"
-            android:textStyle="bold"
-            android:text="The Good, The Bad And The Ugly"
-            android:layout_marginTop="10dp"/>"
+            android:textStyle="bold" />
+"
         
         <!-- Playlist button -->
         <ImageButton 
