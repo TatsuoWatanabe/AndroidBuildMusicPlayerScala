@@ -1,13 +1,17 @@
 package com.androidhive.scala.musicplayer
 
+import android.util.Log
 import android.content.Intent
 import android.media.MediaPlayer
 import android.media.MediaPlayer.OnCompletionListener
 import android.view.View
+import android.view.KeyEvent
 import android.widget.ImageButton
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
+import android.content.BroadcastReceiver
+import android.content.Context
 
 class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCompletionListener with SeekBar.OnSeekBarChangeListener {
   // Handler to update UI timer, progress bar etc,.
@@ -29,42 +33,16 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     val songTotalDurationLabel   = findViewById(R.id.songTotalDurationLabel).asInstanceOf[TextView]
   }
   
-  private object Player {
-    val mp = new MediaPlayer
-    val playList = SongsManager.getPlayList
-    val seekForwardTime  = 5000 //milliseconds
-    val seekBackwardTime = 5000 //milliseconds
-    var isShuffle = false
-    var isRepeat  = false
-    private var index = 0
-    
-    def forword() = mp.getCurrentPosition match {
-      case(cp: Int) if cp + seekForwardTime <= mp.getDuration => mp.seekTo(cp + seekForwardTime) //forward position
-      case _ => mp.seekTo(mp.getDuration) //forward to end position
-    }
-    
-    def backward() = mp.getCurrentPosition match {
-      case(cp: Int) if cp - seekBackwardTime >= 0 => mp.seekTo(cp - seekBackwardTime) //backward position
-      case _ => mp.seekTo(0) //backward to starting position
-    }
-    
-    def setIndex(i: Int) { index = i; mp.reset; mp.setDataSource(playList.get(i).get("songPath")); mp.prepare }
-    def setRandomIndex() { index = (new scala.util.Random).nextInt(playList.size) }
-    def initialize() = setIndex(0)
-    def getTitle() = playList.get(index).get("songTitle")
-    def getTimeStringByPercentage(p: Int) = Utilities.progressToTimeString(p, mp.getDuration)
-    def getProgressPercentage() = Utilities.getProgressPercentage(mp.getCurrentPosition, mp.getDuration)
-    def getCurrentTimeString()  = Utilities.milliSecondsToTimeString(mp.getCurrentPosition)
-    def getTotalTimeString()    = Utilities.milliSecondsToTimeString(mp.getDuration)
-    def hasNext() = index < playList.size - 1
-    def hasPrevious() = index > 0
-    def next()     { if(hasNext)     setIndex(index + 1) else setIndex(0) }
-    def previous() { if(hasPrevious) setIndex(index - 1) else setIndex(playList.size - 1) }
-  } //end object Player
-  
   override protected def onCreate(savedInstanceState: android.os.Bundle) {
+    Log.d("Watch", "Watch -- onCreate!")
     super.onCreate(savedInstanceState)
     setContentView(R.layout.player)
+
+    // Start listening for button presses
+    // http://techbooster.jpn.org/andriod/ui/10298/
+    val am = getSystemService(Context.AUDIO_SERVICE).asInstanceOf[android.media.AudioManager]
+    val myEventReceiver = new android.content.ComponentName(getPackageName, classOf[RemoteControlReceiver].getName)
+    am.registerMediaButtonEventReceiver(myEventReceiver)
     
     if(Player.playList.isEmpty){
       val s = "再生できるファイルが見つかりませんでした。"
@@ -83,10 +61,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
      * Play button click event
      */
     Btns.btnPlay.setOnClickListener(new View.OnClickListener {
-      override def onClick(arg0: View) = Player.mp.isPlaying match {
-        case true  => Player.mp.pause; referPlayer
-        case false => startPlaying
-      }
+      override def onClick(arg0: View) { Player.togglePlaying; referPlayer }
     })
     
     /**
@@ -94,7 +69,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
      * Forwards song specified seconds
      */
     Btns.btnForward.setOnClickListener(new View.OnClickListener {
-      override def onClick(arg0: View) = Player.forword
+      override def onClick(arg0: View) { Player.forword; referPlayerProgress }
     })
     
     /**
@@ -102,21 +77,27 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
      * Backward song to specified seconds
      */
     Btns.btnBackward.setOnClickListener(new View.OnClickListener {
-      override def onClick(arg0: View) = Player.backward
+      override def onClick(arg0: View) { Player.backward; referPlayerProgress }
     })
     
     /**
      * Next button click event
      */
     Btns.btnNext.setOnClickListener(new View.OnClickListener {
-      override def onClick(arg0: View) { Player.next; startPlaying }
+      override def onClick(arg0: View) = Player.mp.isPlaying match { 
+        case true  => Player.next; startPlaying
+        case false => Player.next; referPlayer
+      }
     })
     
     /**
-     * Back button click event
+     * Previous button click event
      */
     Btns.btnPrevious.setOnClickListener(new View.OnClickListener {
-      override def onClick(arg0: View) { Player.previous; startPlaying }
+      override def onClick(arg0: View) = Player.mp.isPlaying match { 
+        case true  => Player.previous; startPlaying
+        case false => Player.previous; referPlayer
+      }
     })
     
     /**
@@ -155,6 +136,18 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     })
 
   } //end onCreate
+
+  /**
+   * dispatchKeyEvent
+   */
+  override def dispatchKeyEvent(e: KeyEvent) = {
+    Log.d("Watch", "Watch -- dispatchKeyEvent! keyCode = " + e.getKeyCode)
+    (e.getAction, e.getKeyCode)  match {
+      case (_, KeyEvent.KEYCODE_BACK) => false //don't destroy this activity
+      case (KeyEvent.ACTION_UP, _ ) => referPlayer; super.dispatchKeyEvent(e) //for remote controller
+      case (_, _) => super.dispatchKeyEvent(e)
+    }
+  }
   
   /**
    * Receiving song index from playlist view and play the song
@@ -168,24 +161,88 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
   }
   
   /**
+   * When user starts moving the progress handler
+   */
+  override def onStartTrackingTouch(seekBar: SeekBar) { stopUpdateProgressBar }
+  
+  /**
+   * onProgressChanged
+   */
+  override def onProgressChanged(seekBar: SeekBar, progress: Int, fromTouch: Boolean) = fromTouch match {
+    case true => Btns.songCurrentDurationLabel.setText(Player.getTimeStringByPercentage(progress))
+    case false =>
+  }
+  
+  /**
+   * When user stops moving the progress hanlder
+   */
+  override def onStopTrackingTouch(seekBar: SeekBar) {
+    stopUpdateProgressBar //stop update timer progress
+    val currentPosition = Utilities.progressToMilliSeconds(seekBar.getProgress, Player.mp.getDuration)
+
+    Player.mp.seekTo(currentPosition) //forward or backward to certain seconds
+    updateProgressBar //update timer progress again
+  }
+
+  /**
+   * On Song Playing completed
+   */
+  override def onCompletion(arg0: MediaPlayer) = (Player.isRepeat, Player.isShuffle) match {
+    case(true, _) => startPlaying //repeat is on play same song again
+    case(false, true) => Player.setRandomIndex; startPlaying //shuffle is on - play a random song
+    case(_, _) if Player.hasNext => Player.next; startPlaying // no repeat or shuffle ON - play next song
+    case _ => Player.initialize; referPlayer //to first song
+  }
+  
+  /**
+   * onStart
+   */
+  override def onStart {
+    Log.d("Watch", "Watch -- onStart!")
+    referPlayer
+    updateProgressBar
+    super.onStart
+  }
+
+  /**
+   * onStop
+   */
+  override def onStop {
+    Log.d("Watch", "Watch -- onStop!")
+    stopUpdateProgressBar
+    super.onStop
+  }
+  
+  /**
+   * onDestroy
+   */
+  override def onDestroy {
+    Log.d("Watch", "Watch -- onDestroy!")
+    super.onDestroy
+    Player.mp.release
+  }
+  
+  /**
    * Function to play a song
    */
   def startPlaying() {
-    try {
-      Player.mp.start
-      referPlayer
-      updateProgressBar //Updating progress bar
-    } catch {
-      case e: IllegalArgumentException => e.printStackTrace
-      case e: IllegalStateException    => e.printStackTrace
-      case e: java.io.IOException      => e.printStackTrace
-    }
+    Player.mp.start
+    referPlayer
+  }
+  
+  /**
+   * Function to pause a song
+   */
+  def pausePlaying() {
+    Player.mp.pause
+    referPlayer
   }
   
   /**
    * Update timer on seekbar
    */
   def updateProgressBar() = mHandler.postDelayed(mUpdateTimeTask, 100)
+  def stopUpdateProgressBar() = mHandler.removeCallbacks(mUpdateTimeTask)
   
   /**
    * Background Runnable thread
@@ -209,6 +266,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
    * Refer all Player state to Btns
    */
   def referPlayer {
+    Log.d("Watch", "Watch -- referPlayer!")
     referPlayerProgress
     Btns.songTitleLabel.setText(Player.getTitle) //Displaying Song title
     Btns.songTotalDurationLabel.setText(Player.getTotalTimeString) //Displaying Total Duration time
@@ -218,44 +276,27 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     Btns.songProgressBar.setProgress(Player.getProgressPercentage) //set Progress bar values
     Btns.songProgressBar.setMax(100)    //set Progress bar values
   }
+} //end AndroidBuildingMusicPlayerActivity
 
-  /**
-   * When user starts moving the progress handler
-   */
-  override def onStartTrackingTouch(seekBar: SeekBar) = mHandler.removeCallbacks(mUpdateTimeTask)
-  
-  /**
-   * onProgressChanged
-   */
-  override def onProgressChanged(seekBar: SeekBar, progress: Int, fromTouch: Boolean) = fromTouch match {
-    case true => Btns.songCurrentDurationLabel.setText(Player.getTimeStringByPercentage(progress))
-    case false =>
-  }
-  
-  /**
-   * When user stops moving the progress hanlder
-   */
-  override def onStopTrackingTouch(seekBar: SeekBar) {
-    mHandler.removeCallbacks(mUpdateTimeTask)
-    val currentPosition = Utilities.progressToMilliSeconds(seekBar.getProgress, Player.mp.getDuration)
-
-    Player.mp.seekTo(currentPosition) //forward or backward to certain seconds
-    updateProgressBar //update timer progress again
-  }
-
-  /**
-   * On Song Playing completed
-   */
-  override def onCompletion(arg0: MediaPlayer) = (Player.isRepeat, Player.isShuffle) match {
-    case(true, _) => startPlaying //repeat is on play same song again
-    case(false, true) => Player.setRandomIndex; startPlaying //shuffle is on - play a random song
-    case(_, _) if Player.hasNext => Player.next; startPlaying // no repeat or shuffle ON - play next song
-    case _ => Player.initialize; referPlayer //to first song
-  }
-  
-  /**
-   * onDestroy
-   */
-  override def onDestroy { super.onDestroy; Player.mp.release }
-  
+/**
+ * RemoteControlReceiver
+ * http://firespeed.org/diary.php?diary=kenz-1519-junl18
+ */
+class RemoteControlReceiver extends BroadcastReceiver {
+  override def onReceive(context: Context, intent: Intent){
+    Log.d("Watch", "Watch -- onReceive!")
+    if(intent.getAction != Intent.ACTION_MEDIA_BUTTON){ return }
+    
+    val keyEv = intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT).asInstanceOf[KeyEvent]
+    if(keyEv.getAction != KeyEvent.ACTION_DOWN){ return }
+    
+    val keyCode = keyEv.getKeyCode
+    val KEYCODE_MEDIA_PLAY  = 126
+    val KEYCODE_MEDIA_PAUSE = 127
+    
+    keyCode match {
+      case KEYCODE_MEDIA_PLAY | KEYCODE_MEDIA_PAUSE | KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE => Player.togglePlaying
+      case _ =>
+    } 
+  }// end onReceive
 }
