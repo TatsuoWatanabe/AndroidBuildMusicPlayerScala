@@ -20,6 +20,12 @@
             </intent-filter>
         </activity>
         
+		<receiver android:name=".RemoteControlReceiver">
+		    <intent-filter>
+		        <action android:name="android.intent.action.MEDIA_BUTTON" />
+		    </intent-filter>
+		</receiver>
+        
         <activity
             android:name="com.androidhive.scala.musicplayer.PlayListActivity" />
     </application>
