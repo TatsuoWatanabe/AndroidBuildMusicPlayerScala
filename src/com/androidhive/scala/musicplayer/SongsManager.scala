@@ -5,7 +5,7 @@ object SongsManager {
   val MEDIA_PATH = "/sdcard/"
 
   /**
-   * Function to read all mp3 files from sdcard
+   * Function to read all audio files from sdcard
    * and store the details in ArrayList
    */
   def getPlayList = {
@@ -22,9 +22,9 @@ object SongsManager {
     }
     playList
   }
-	
+
   /**
-   * Class to filter files which are having .mp3 extension
+   * Class to filter files which are having specified extension
    */
   class FileExtensionFilter extends java.io.FilenameFilter {
     def accept(dir: java.io.File, name: String) = {

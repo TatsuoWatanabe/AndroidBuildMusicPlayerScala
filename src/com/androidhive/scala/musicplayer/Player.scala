@@ -8,17 +8,17 @@ object Player {
   var isShuffle = false
   var isRepeat  = false
   private var index = 0
-  
+
   def forword() = mp.getCurrentPosition match {
     case(cp: Int) if cp + seekForwardTime <= mp.getDuration => mp.seekTo(cp + seekForwardTime) //forward position
     case _ => mp.seekTo(mp.getDuration) //forward to end position
   }
-  
+
   def backward() = mp.getCurrentPosition match {
     case(cp: Int) if cp - seekBackwardTime >= 0 => mp.seekTo(cp - seekBackwardTime) //backward position
     case _ => mp.seekTo(0) //backward to starting position
   }
-  
+
   def togglePlaying() { if(mp.isPlaying) mp.pause else mp.start }
   def setIndex(i: Int) { index = i; mp.reset; mp.setDataSource(playList.get(i).get("songPath")); mp.prepare }
   def setRandomIndex() { setIndex((new scala.util.Random).nextInt(playList.size)) }

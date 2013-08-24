@@ -8,7 +8,6 @@ import android.view.View
 import android.view.KeyEvent
 import android.widget.ImageButton
 import android.widget.SeekBar
-
 import android.widget.TextView
 import android.widget.Toast
 import android.content.BroadcastReceiver
@@ -33,7 +32,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     val songCurrentDurationLabel = findViewById(R.id.songCurrentDurationLabel).asInstanceOf[TextView]
     val songTotalDurationLabel   = findViewById(R.id.songTotalDurationLabel).asInstanceOf[TextView]
   }
-  
+
   override protected def onCreate(savedInstanceState: android.os.Bundle) {
     Log.d("Watch", "Watch -- onCreate!")
     super.onCreate(savedInstanceState)
@@ -44,27 +43,27 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     val am = getSystemService(Context.AUDIO_SERVICE).asInstanceOf[android.media.AudioManager]
     val myEventReceiver = new android.content.ComponentName(getPackageName, classOf[RemoteControlReceiver].getName)
     am.registerMediaButtonEventReceiver(myEventReceiver)
-    
+
     if(Player.playList.isEmpty){
       val s = SongsManager.MEDIA_PATH + " に音声ファイルが見つかりませんでした。"
       (new android.app.AlertDialog.Builder(this)).setMessage(s).setPositiveButton(android.R.string.ok, null).show()
       return
     }
-    
+
     Player.initialize
     referPlayer
-    
+
     // Listeners
     Btns.songProgressBar.setOnSeekBarChangeListener(this) // Important
     Player.mp.setOnCompletionListener(this) // Important
-    
+
     /**
      * Play button click event
      */
     Btns.btnPlay.setOnClickListener(new View.OnClickListener {
       override def onClick(arg0: View) { Player.togglePlaying; referPlayer }
     })
-    
+
     /**
      * Forward button click event
      * Forwards song specified seconds
@@ -72,7 +71,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     Btns.btnForward.setOnClickListener(new View.OnClickListener {
       override def onClick(arg0: View) { Player.forword; referPlayerProgress }
     })
-    
+
     /**
      * Backward button click event
      * Backward song to specified seconds
@@ -80,39 +79,39 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     Btns.btnBackward.setOnClickListener(new View.OnClickListener {
       override def onClick(arg0: View) { Player.backward; referPlayerProgress }
     })
-    
+
     /**
      * Next button click event
      */
     Btns.btnNext.setOnClickListener(new View.OnClickListener {
-      override def onClick(arg0: View) = Player.mp.isPlaying match { 
+      override def onClick(arg0: View) = Player.mp.isPlaying match {
         case true  => Player.next; startPlaying
         case false => Player.next; referPlayer
       }
     })
-    
+
     /**
      * Previous button click event
      */
     Btns.btnPrevious.setOnClickListener(new View.OnClickListener {
-      override def onClick(arg0: View) = Player.mp.isPlaying match { 
+      override def onClick(arg0: View) = Player.mp.isPlaying match {
         case true  => Player.previous; startPlaying
         case false => Player.previous; referPlayer
       }
     })
-    
+
     /**
      * Button Click event for Repeat button
      */
     Btns.btnRepeat.setOnClickListener(new View.OnClickListener {
-      override def onClick(arg0: View) { 
+      override def onClick(arg0: View) {
         Player.isRepeat = !Player.isRepeat
         if(Player.isRepeat){ Player.isShuffle = false } //make shuffle to false
         Toast.makeText(getApplicationContext(), "Repeat is " + (if(Player.isRepeat) "ON" else "OFF" ), Toast.LENGTH_SHORT).show()
         referPlayer
       }
     })
-    
+
     /**
      * Button Click event for Shuffle button
      */
@@ -124,13 +123,13 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
         referPlayer
       }
     })
-    
+
     /**
      * Button Click event for Play list click event
      * Launches list activity which displays list of songs
      */
     Btns.btnPlaylist.setOnClickListener(new View.OnClickListener {
-      override def onClick(arg0: View) { 
+      override def onClick(arg0: View) {
         val i = new Intent(getApplicationContext(), classOf[PlayListActivity])
         startActivityForResult(i, 100)
       }
@@ -149,23 +148,24 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
       case (_, _) => super.dispatchKeyEvent(e)
     }
   }
-  
+
   /**
    * Receiving song index from playlist view and play the song
    */
   override def onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
     super.onActivityResult(requestCode, resultCode, data)
     if(resultCode == 100){
+      val afterFunc = if(Player.mp.isPlaying){ () => startPlaying }else{ () => referPlayer } // for keep playing state
       Player.setIndex(data.getExtras().getInt("songIndex"))
-      startPlaying //play selected one
+      afterFunc()
     }
   }
-  
+
   /**
    * When user starts moving the progress handler
    */
   override def onStartTrackingTouch(seekBar: SeekBar) { stopUpdateProgressBar }
-  
+
   /**
    * onProgressChanged
    */
@@ -173,7 +173,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     case true => Btns.songCurrentDurationLabel.setText(Player.getTimeStringByPercentage(progress))
     case false =>
   }
-  
+
   /**
    * When user stops moving the progress hanlder
    */
@@ -194,35 +194,36 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     case(_, _) if Player.hasNext => Player.next; startPlaying // no repeat or shuffle ON - play next song
     case _ => Player.initialize; referPlayer //to first song
   }
-  
+
   /**
    * onStart
    */
   override def onStart {
+    super.onStart
     Log.d("Watch", "Watch -- onStart!")
     referPlayer
     updateProgressBar
-    super.onStart
+
   }
 
   /**
    * onStop
    */
   override def onStop {
+    super.onStop
     Log.d("Watch", "Watch -- onStop!")
     stopUpdateProgressBar
-    super.onStop
   }
-  
+
   /**
    * onDestroy
    */
   override def onDestroy {
-    Log.d("Watch", "Watch -- onDestroy!")
     super.onDestroy
+    Log.d("Watch", "Watch -- onDestroy!")
     Player.mp.release
   }
-  
+
   /**
    * Function to play a song
    */
@@ -230,7 +231,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     Player.mp.start
     referPlayer
   }
-  
+
   /**
    * Function to pause a song
    */
@@ -238,13 +239,13 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     Player.mp.pause
     referPlayer
   }
-  
+
   /**
    * Update timer on seekbar
    */
-  def updateProgressBar() = mHandler.postDelayed(mUpdateTimeTask, 100)
+  def updateProgressBar()     = mHandler.postDelayed(mUpdateTimeTask, 100)
   def stopUpdateProgressBar() = mHandler.removeCallbacks(mUpdateTimeTask)
-  
+
   /**
    * Background Runnable thread
    */
@@ -254,7 +255,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
       mHandler.postDelayed(this, 100) //Running this thread after 100 milliseconds
     }
   }
-  
+
   /**
    * Refer Player progress to Btns
    */
@@ -262,7 +263,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     Btns.songProgressBar.setProgress(Player.getProgressPercentage) //Updating progress bar
     Btns.songCurrentDurationLabel.setText(Player.getCurrentTimeString) //Displaying time completed playing
   }
- 
+
   /**
    * Refer all Player state to Btns
    */
@@ -272,7 +273,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     Btns.songTitleLabel.setText(Player.getTitle) //Displaying Song title
     Btns.songTotalDurationLabel.setText(Player.getTotalTimeString) //Displaying Total Duration time
     Btns.btnPlay.setImageResource(if(Player.mp.isPlaying) R.drawable.btn_pause else R.drawable.btn_play) //Changing Button Image
-    Btns.btnShuffle.setImageResource(if(Player.isShuffle) R.drawable.btn_shuffle_focused else R.drawable.btn_shuffle ) 
+    Btns.btnShuffle.setImageResource(if(Player.isShuffle) R.drawable.btn_shuffle_focused else R.drawable.btn_shuffle )
     Btns.btnRepeat.setImageResource(if(Player.isRepeat) R.drawable.btn_repeat_focused else R.drawable.btn_repeat )
     Btns.songProgressBar.setProgress(Player.getProgressPercentage) //set Progress bar values
     Btns.songProgressBar.setMax(100)    //set Progress bar values
@@ -287,17 +288,17 @@ class RemoteControlReceiver extends BroadcastReceiver {
   override def onReceive(context: Context, intent: Intent){
     Log.d("Watch", "Watch -- onReceive!")
     if(intent.getAction != Intent.ACTION_MEDIA_BUTTON){ return }
-    
+
     val keyEv = intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT).asInstanceOf[KeyEvent]
     if(keyEv.getAction != KeyEvent.ACTION_DOWN){ return }
-    
+
     val keyCode = keyEv.getKeyCode
     val KEYCODE_MEDIA_PLAY  = 126
     val KEYCODE_MEDIA_PAUSE = 127
-    
+
     keyCode match {
       case KEYCODE_MEDIA_PLAY | KEYCODE_MEDIA_PAUSE | KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE => Player.togglePlaying
       case _ =>
-    } 
+    }
   }// end onReceive
 }
