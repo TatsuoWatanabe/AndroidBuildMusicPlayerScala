@@ -27,6 +27,8 @@ object SongsManager {
    * Class to filter files which are having .mp3 extension
    */
   class FileExtensionFilter extends java.io.FilenameFilter {
-    def accept(dir: java.io.File, name: String) = name.endsWith(".mp3") || name.endsWith(".MP3")
+    def accept(dir: java.io.File, name: String) = {
+      List(".wav", ".mp3", ".aac", ".m4a", ".mid").exists(name.toLowerCase.endsWith(_))
+    }
   }
 }

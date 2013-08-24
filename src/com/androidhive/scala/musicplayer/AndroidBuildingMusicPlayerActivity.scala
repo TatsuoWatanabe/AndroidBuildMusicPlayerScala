@@ -8,6 +8,7 @@ import android.view.View
 import android.view.KeyEvent
 import android.widget.ImageButton
 import android.widget.SeekBar
+
 import android.widget.TextView
 import android.widget.Toast
 import android.content.BroadcastReceiver
@@ -45,7 +46,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     am.registerMediaButtonEventReceiver(myEventReceiver)
     
     if(Player.playList.isEmpty){
-      val s = "再生できるファイルが見つかりませんでした。"
+      val s = SongsManager.MEDIA_PATH + " に音声ファイルが見つかりませんでした。"
       (new android.app.AlertDialog.Builder(this)).setMessage(s).setPositiveButton(android.R.string.ok, null).show()
       return
     }
