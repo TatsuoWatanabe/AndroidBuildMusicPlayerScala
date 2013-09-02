@@ -3,5 +3,6 @@
 
     <string name="hello">Hello World, AndroidBuildingMusicPlayerActivity!</string>
     <string name="app_name">AndroidBuildingMusicPlayer</string>
+    <string name="activity_animation_duration">1000</string>
 
 </resources>

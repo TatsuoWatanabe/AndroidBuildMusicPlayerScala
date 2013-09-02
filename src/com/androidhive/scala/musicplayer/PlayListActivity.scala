@@ -9,6 +9,7 @@ class PlayListActivity extends android.app.ListActivity  {
 
   override protected def onCreate(savedInstanceState: android.os.Bundle) {
     super.onCreate(savedInstanceState)
+    requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
     setContentView(R.layout.playlist)
 
     // Adding menuItems to ListView
