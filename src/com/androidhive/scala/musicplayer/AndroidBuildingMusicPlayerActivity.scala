@@ -16,21 +16,22 @@ import android.content.Context
 class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCompletionListener with SeekBar.OnSeekBarChangeListener {
   // Handler to update UI timer, progress bar etc,.
   private val mHandler = new android.os.Handler
-
-  // All player buttons
-  private object Btns {
-    val btnPlay                  = findViewById(R.id.btnPlay).asInstanceOf[ImageButton]
-    val btnForward               = findViewById(R.id.btnForward).asInstanceOf[ImageButton]
-    val btnBackward              = findViewById(R.id.btnBackward).asInstanceOf[ImageButton]
-    val btnNext                  = findViewById(R.id.btnNext).asInstanceOf[ImageButton]
-    val btnPrevious              = findViewById(R.id.btnPrevious).asInstanceOf[ImageButton]
-    val btnPlaylist              = findViewById(R.id.btnPlaylist).asInstanceOf[ImageButton]
-    val btnRepeat                = findViewById(R.id.btnRepeat).asInstanceOf[ImageButton]
-    val btnShuffle               = findViewById(R.id.btnShuffle).asInstanceOf[ImageButton]
-    val songProgressBar          = findViewById(R.id.songProgressBar).asInstanceOf[SeekBar]
-    val songTitleLabel           = findViewById(R.id.songTitle).asInstanceOf[TextView]
-    val songCurrentDurationLabel = findViewById(R.id.songCurrentDurationLabel).asInstanceOf[TextView]
-    val songTotalDurationLabel   = findViewById(R.id.songTotalDurationLabel).asInstanceOf[TextView]
+  
+  // TypedResource
+  private object TR {
+    private def v[A <: View](id: Int) = findViewById(id).asInstanceOf[A]
+    val btnPlay                   = v[ImageButton](R.id.btnPlay)
+    val btnForward                = v[ImageButton](R.id.btnForward)
+    val btnBackward               = v[ImageButton](R.id.btnBackward)
+    val btnNext                   = v[ImageButton](R.id.btnNext)
+    val btnPrevious               = v[ImageButton](R.id.btnPrevious)
+    val btnPlaylist               = v[ImageButton](R.id.btnPlaylist)
+    val btnRepeat                 = v[ImageButton](R.id.btnRepeat)
+    val btnShuffle                = v[ImageButton](R.id.btnShuffle)
+    val songProgressBar           = v[SeekBar](R.id.songProgressBar)
+    val songTitleLabel            = v[TextView](R.id.songTitle)
+    val songCurrentDurationLabel  = v[TextView](R.id.songCurrentDurationLabel)
+    val songTotalDurationLabel    = v[TextView](R.id.songTotalDurationLabel)
   }
 
   override protected def onCreate(savedInstanceState: android.os.Bundle) {
@@ -54,13 +55,13 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     referPlayer
 
     // Listeners
-    Btns.songProgressBar.setOnSeekBarChangeListener(this) // Important
+    TR.songProgressBar.setOnSeekBarChangeListener(this) // Important
     Player.mp.setOnCompletionListener(this) // Important
 
     /**
      * Play button click event
      */
-    Btns.btnPlay.setOnClickListener(new View.OnClickListener {
+    TR.btnPlay.setOnClickListener(new View.OnClickListener {
       override def onClick(arg0: View) { Player.togglePlaying; referPlayer }
     })
 
@@ -68,7 +69,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
      * Forward button click event
      * Forwards song specified seconds
      */
-    Btns.btnForward.setOnClickListener(new View.OnClickListener {
+    TR.btnForward.setOnClickListener(new View.OnClickListener {
       override def onClick(arg0: View) { Player.forword; referPlayerProgress }
     })
 
@@ -76,14 +77,14 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
      * Backward button click event
      * Backward song to specified seconds
      */
-    Btns.btnBackward.setOnClickListener(new View.OnClickListener {
+    TR.btnBackward.setOnClickListener(new View.OnClickListener {
       override def onClick(arg0: View) { Player.backward; referPlayerProgress }
     })
 
     /**
      * Next button click event
      */
-    Btns.btnNext.setOnClickListener(new View.OnClickListener {
+    TR.btnNext.setOnClickListener(new View.OnClickListener {
       override def onClick(arg0: View) = Player.mp.isPlaying match {
         case true  => Player.next; startPlaying
         case false => Player.next; referPlayer
@@ -93,7 +94,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     /**
      * Previous button click event
      */
-    Btns.btnPrevious.setOnClickListener(new View.OnClickListener {
+    TR.btnPrevious.setOnClickListener(new View.OnClickListener {
       override def onClick(arg0: View) = Player.mp.isPlaying match {
         case true  => Player.previous; startPlaying
         case false => Player.previous; referPlayer
@@ -103,7 +104,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     /**
      * Button Click event for Repeat button
      */
-    Btns.btnRepeat.setOnClickListener(new View.OnClickListener {
+    TR.btnRepeat.setOnClickListener(new View.OnClickListener {
       override def onClick(arg0: View) {
         Player.isRepeat = !Player.isRepeat
         if(Player.isRepeat){ Player.isShuffle = false } //make shuffle to false
@@ -115,7 +116,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
     /**
      * Button Click event for Shuffle button
      */
-    Btns.btnShuffle.setOnClickListener(new View.OnClickListener {
+    TR.btnShuffle.setOnClickListener(new View.OnClickListener {
       override def onClick(arg0: View) {
         Player.isShuffle = !Player.isShuffle
         if(Player.isShuffle){ Player.isRepeat = false } //make repeat to false
@@ -128,7 +129,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
      * Button Click event for Play list click event
      * Launches list activity which displays list of songs
      */
-    Btns.btnPlaylist.setOnClickListener(new View.OnClickListener {
+    TR.btnPlaylist.setOnClickListener(new View.OnClickListener {
       override def onClick(arg0: View) {
         val i = new Intent(getApplicationContext(), classOf[PlayListActivity])
         startActivityForResult(i, 100)
@@ -170,7 +171,7 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
    * onProgressChanged
    */
   override def onProgressChanged(seekBar: SeekBar, progress: Int, fromTouch: Boolean) = fromTouch match {
-    case true => Btns.songCurrentDurationLabel.setText(Player.getTimeStringByPercentage(progress))
+    case true => TR.songCurrentDurationLabel.setText(Player.getTimeStringByPercentage(progress))
     case false =>
   }
 
@@ -260,8 +261,8 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
    * Refer Player progress to Btns
    */
   def referPlayerProgress {
-    Btns.songProgressBar.setProgress(Player.getProgressPercentage) //Updating progress bar
-    Btns.songCurrentDurationLabel.setText(Player.getCurrentTimeString) //Displaying time completed playing
+    TR.songProgressBar.setProgress(Player.getProgressPercentage) //Updating progress bar
+    TR.songCurrentDurationLabel.setText(Player.getCurrentTimeString) //Displaying time completed playing
   }
 
   /**
@@ -270,13 +271,13 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
   def referPlayer {
     Log.d("Watch", "Watch -- referPlayer!")
     referPlayerProgress
-    Btns.songTitleLabel.setText(Player.getTitle) //Displaying Song title
-    Btns.songTotalDurationLabel.setText(Player.getTotalTimeString) //Displaying Total Duration time
-    Btns.btnPlay.setImageResource(if(Player.mp.isPlaying) R.drawable.btn_pause else R.drawable.btn_play) //Changing Button Image
-    Btns.btnShuffle.setImageResource(if(Player.isShuffle) R.drawable.btn_shuffle_focused else R.drawable.btn_shuffle )
-    Btns.btnRepeat.setImageResource(if(Player.isRepeat) R.drawable.btn_repeat_focused else R.drawable.btn_repeat )
-    Btns.songProgressBar.setProgress(Player.getProgressPercentage) //set Progress bar values
-    Btns.songProgressBar.setMax(100)    //set Progress bar values
+    TR.songTitleLabel.setText(Player.getTitle) //Displaying Song title
+    TR.songTotalDurationLabel.setText(Player.getTotalTimeString) //Displaying Total Duration time
+    TR.btnPlay.setImageResource(if(Player.mp.isPlaying) R.drawable.btn_pause else R.drawable.btn_play) //Changing Button Image
+    TR.btnShuffle.setImageResource(if(Player.isShuffle) R.drawable.btn_shuffle_focused else R.drawable.btn_shuffle )
+    TR.btnRepeat.setImageResource(if(Player.isRepeat) R.drawable.btn_repeat_focused else R.drawable.btn_repeat )
+    TR.songProgressBar.setProgress(Player.getProgressPercentage) //set Progress bar values
+    TR.songProgressBar.setMax(100)    //set Progress bar values
   }
 } //end AndroidBuildingMusicPlayerActivity
 
