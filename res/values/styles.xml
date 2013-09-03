@@ -18,11 +18,11 @@
     </style>
     
 	<!-- アクティビティを半透明にする: http://wiki.livedoor.jp/moonlight_aska/d/%A5%A2%A5%AF%A5%C6%A5%A3%A5%D3%A5%C6%A5%A3%A4%F2%C8%BE%C6%A9%CC%C0%A4%CB%A4%B9%A4%EB -->
-    <drawable name="translucent_background">#cc000000</drawable>
     <style name="Theme.MyTrans" parent="android:style/Theme.Translucent">
         <item name="android:windowBackground">@drawable/translucent_background</item>
         <item name="android:windowAnimationStyle">@style/Animation.Activity</item> 
     </style>
+    <drawable name="translucent_background">#cc000000</drawable>
     
 	<!-- ActivityのOpenとCloseをアニメーションさせる: http://www.adamrocker.com/blog/289/activity_open_close_animation.html -->
 	<style name="Animation" parent="android:Animation" />
