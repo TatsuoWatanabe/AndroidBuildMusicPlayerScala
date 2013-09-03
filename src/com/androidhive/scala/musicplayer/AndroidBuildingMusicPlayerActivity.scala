@@ -202,9 +202,10 @@ class AndroidBuildingMusicPlayerActivity extends android.app.Activity with OnCom
   override def onStart {
     super.onStart
     Log.d("Watch", "Watch -- onStart!")
-    referPlayer
-    updateProgressBar
-
+    if(!Player.playList.isEmpty){
+      referPlayer
+      updateProgressBar
+    }
   }
 
   /**
